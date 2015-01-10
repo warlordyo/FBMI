@@ -12,7 +12,6 @@ class Upload extends CI_Controller {
         
         if(isset($_POST['upload']))
         {
-            
             $config['upload_path'] = "./upload";
             $config['allowed_types'] = "zip|rar|pdj|jpeg|png|pdf|doc|docx";
             
