@@ -32,15 +32,16 @@ class Upload extends CI_Controller {
     }
  function open_sem($semester)
  {
-     $this->load->model('semester_model');
-     $data['subjects'] = $this->semester_model->get_subjects($semester);
-     $this->load->view('semester_view',$data);
+    $this->load->model('semester_model');
+    $data['subjects'] = $this->semester_model->get_subjects($semester);
+    $this->load->view('semester_view',$data);
  }
  function open_subj($subj)
  {
-     $this->load->model('subject_model');
-     $data['files'] = $this->subject_model->get_subjects($subj);
-     $this->load->view('subjects_view',$data);     
+     var_dump($subj);
+    $this->load->model('subject_model');
+    $data['files'] = $this->subject_model->get_subjects($subj);
+    $this->load->view('subjects_view',$data);     
  }
  function show_files()
  {
