@@ -38,7 +38,8 @@
 |
 */
 
-$route['default_controller'] = "welcome";
+$route['default_controller'] = "gallery";
+$route['admin'] = "admin/albums";
 $route['404_override'] = '';
 
 
