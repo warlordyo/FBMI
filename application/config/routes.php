@@ -38,9 +38,13 @@
 |
 */
 
-$route['default_controller'] = "gallery";
-$route['admin'] = "admin/albums";
+$route['default_controller'] = "home";
 $route['404_override'] = '';
+
+
+//Custom routing
+$route['signin'] = 'users/signin';
+$route['signup'] = 'users/signup';
 
 
 /* End of file routes.php */

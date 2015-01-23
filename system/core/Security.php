@@ -6,7 +6,7 @@
  *
  * @package		CodeIgniter
  * @author		ExpressionEngine Dev Team
- * @copyright	Copyright (c) 2008 - 2014, EllisLab, Inc.
+ * @copyright	Copyright (c) 2008 - 2011, EllisLab, Inc.
  * @license		http://codeigniter.com/user_guide/license.html
  * @link		http://codeigniter.com
  * @since		Version 1.0
@@ -98,32 +98,26 @@ class CI_Security {
 
 	/**
 	 * Constructor
-	 *
-	 * @return	void
 	 */
 	public function __construct()
 	{
-		// Is CSRF protection enabled?
-		if (config_item('csrf_protection') === TRUE)
+		// CSRF config
+		foreach(array('csrf_expire', 'csrf_token_name', 'csrf_cookie_name') as $key)
 		{
-			// CSRF config
-			foreach (array('csrf_expire', 'csrf_token_name', 'csrf_cookie_name') as $key)
+			if (FALSE !== ($val = config_item($key)))
 			{
-				if (FALSE !== ($val = config_item($key)))
-				{
-					$this->{'_'.$key} = $val;
-				}
+				$this->{'_'.$key} = $val;
 			}
-
-			// Append application specific cookie prefix
-			if (config_item('cookie_prefix'))
-			{
-				$this->_csrf_cookie_name = config_item('cookie_prefix').$this->_csrf_cookie_name;
-			}
-
-			// Set the CSRF hash
-			$this->_csrf_set_hash();
 		}
+
+		// Append application specific cookie prefix
+		if (config_item('cookie_prefix'))
+		{
+			$this->_csrf_cookie_name = config_item('cookie_prefix').$this->_csrf_cookie_name;
+		}
+
+		// Set the CSRF hash
+		$this->_csrf_set_hash();
 
 		log_message('debug', "Security Class Initialized");
 	}
@@ -137,14 +131,15 @@ class CI_Security {
 	 */
 	public function csrf_verify()
 	{
-		// If it's not a POST request we will set the CSRF cookie
-		if (strtoupper($_SERVER['REQUEST_METHOD']) !== 'POST')
+		// If no POST data exists we will set the CSRF cookie
+		if (count($_POST) == 0)
 		{
 			return $this->csrf_set_cookie();
 		}
 
 		// Do the tokens exist in both the _POST and _COOKIE arrays?
-		if ( ! isset($_POST[$this->_csrf_token_name], $_COOKIE[$this->_csrf_cookie_name]))
+		if ( ! isset($_POST[$this->_csrf_token_name]) OR
+			 ! isset($_COOKIE[$this->_csrf_cookie_name]))
 		{
 			$this->csrf_show_error();
 		}
@@ -164,7 +159,7 @@ class CI_Security {
 		$this->_csrf_set_hash();
 		$this->csrf_set_cookie();
 
-		log_message('debug', 'CSRF token verified');
+		log_message('debug', "CSRF token verified ");
 
 		return $this;
 	}
@@ -181,9 +176,14 @@ class CI_Security {
 		$expire = time() + $this->_csrf_expire;
 		$secure_cookie = (config_item('cookie_secure') === TRUE) ? 1 : 0;
 
-		if ($secure_cookie && (empty($_SERVER['HTTPS']) OR strtolower($_SERVER['HTTPS']) === 'off'))
+		if ($secure_cookie)
 		{
-			return FALSE;
+			$req = isset($_SERVER['HTTPS']) ? $_SERVER['HTTPS'] : FALSE;
+
+			if ( ! $req OR $req == 'off')
+			{
+				return FALSE;
+			}
 		}
 
 		setcookie($this->_csrf_cookie_name, $this->_csrf_hash, $expire, config_item('cookie_path'), config_item('cookie_domain'), $secure_cookie);
@@ -385,7 +385,7 @@ class CI_Security {
 
 		/*
 		 * Remove disallowed Javascript in links or img tags
-		 * We used to do some version comparisons and use of stripos(),
+		 * We used to do some version comparisons and use of stripos for PHP5,
 		 * but it is dog slow compared to these simplified non-capturing
 		 * preg_match(), especially if the pattern exists in the string
 		 */
@@ -604,12 +604,12 @@ class CI_Security {
 	protected function _remove_evil_attributes($str, $is_image)
 	{
 		// All javascript event handlers (e.g. onload, onclick, onmouseover), style, and xmlns
-		$evil_attributes = array('(?<!\w)on\w*', 'style', 'xmlns', 'formaction');
+		$evil_attributes = array('on\w*', 'style', 'xmlns', 'formaction');
 
 		if ($is_image === TRUE)
 		{
 			/*
-			 * Adobe Photoshop puts XML metadata into JFIF images,
+			 * Adobe Photoshop puts XML metadata into JFIF images, 
 			 * including namespacing, so we have to allow this for images.
 			 */
 			unset($evil_attributes[array_search('xmlns', $evil_attributes)]);
@@ -619,16 +619,17 @@ class CI_Security {
 			$count = 0;
 			$attribs = array();
 
-			// find occurrences of illegal attribute strings with quotes (042 and 047 are octal quotes)
-			preg_match_all('/('.implode('|', $evil_attributes).')\s*=\s*(\042|\047)([^\\2]*?)(\\2)/is', $str, $matches, PREG_SET_ORDER);
+			// find occurrences of illegal attribute strings without quotes
+			preg_match_all('/('.implode('|', $evil_attributes).')\s*=\s*([^\s>]*)/is', $str, $matches, PREG_SET_ORDER);
 
 			foreach ($matches as $attr)
 			{
+
 				$attribs[] = preg_quote($attr[0], '/');
 			}
 
-			// find occurrences of illegal attribute strings without quotes
-			preg_match_all('/('.implode('|', $evil_attributes).')\s*=\s*([^\s>]*)/is', $str, $matches, PREG_SET_ORDER);
+			// find occurrences of illegal attribute strings with quotes (042 and 047 are octal quotes)
+			preg_match_all("/(".implode('|', $evil_attributes).")\s*=\s*(\042|\047)([^\\2]*?)(\\2)/is",  $str, $matches, PREG_SET_ORDER);
 
 			foreach ($matches as $attr)
 			{
@@ -638,7 +639,7 @@ class CI_Security {
 			// replace illegal attribute strings that are inside an html tag
 			if (count($attribs) > 0)
 			{
-				$str = preg_replace('/(<?)(\/?[^><]+?)([^A-Za-z<>\-])(.*?)('.implode('|', $attribs).')(.*?)([\s><]?)([><]*)/i', '$1$2 $4$6$7$8', $str, -1, $count);
+				$str = preg_replace("/<(\/?[^><]+?)([^A-Za-z<>\-])(.*?)(".implode('|', $attribs).")(.*?)([\s><])([><]*)/i", '<$1 $3$5$6$7', $str, -1, $count);
 			}
 
 		} while ($count);
@@ -870,6 +871,7 @@ class CI_Security {
 	}
 
 }
+// END Security Class
 
 /* End of file Security.php */
 /* Location: ./system/libraries/Security.php */

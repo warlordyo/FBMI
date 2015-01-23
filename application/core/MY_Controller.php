@@ -1,22 +1,8 @@
-<?php
+<?php (defined('BASEPATH')) OR exit('No direct script access allowed');
 
-/**
- * MY Controller class
- *
- * Extends the base class and loads Install and Quicksnap Controllers
- *
- * @package		QuickSnaps
- * @author		Eoin McGrath
- * @link		http://www.starfishwebconsulting.co.uk/quicksnaps
- */
-class MY_Controller extends CI_Controller {
+/* load the MX_Controller class */
+require APPPATH."third_party/MX/Controller.php";
 
+class MY_Controller extends MX_Controller {}
 
-}
-
-require_once('./application/core/Install_Controller.php');
-require_once('./application/core/QS_Controller.php');
-
-/* End of file MY_Controllers.php */
-/* Location: ./quicksnaps_app/libraries/MY_Controllers.php */
-
+?>
