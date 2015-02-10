@@ -2,13 +2,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
  <head>
      <meta charset=utf-8>
-   <title>Simple Login with CodeIgniter</title>
+   <title>Files</title>
  </head>
  <body>
      <?php 
-        foreach($subjects as $r): 
-        echo "<a href = '".base_url()."open_subj"."/".$r->subject."'>$r->subject</a>";
-        echo "<br>";
+        foreach($semester  as $r): 
+            echo "<a href = '".base_url()."files"."/".$r->semester."'>$r->semester</a>";
+            echo "<br>";
         endforeach;  
      ?>
  </body>

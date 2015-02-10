@@ -297,7 +297,7 @@ class CI_URI {
 		foreach (explode("/", preg_replace("|/*(.+?)/*$|", "\\1", $this->uri_string)) as $val)
 		{
 			// Filter segments for security
-			$val = trim($this->_filter_uri($val));
+			$val = urldecode(trim($this->_filter_uri($val)));
 
 			if ($val != '')
 			{
