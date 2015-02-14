@@ -1,7 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 header("Content-Type: text/html; charset=utf-8");
 set_include_path(APPPATH);
-include "Transliterate.php";
 session_start(); //we need to call PHP's session object to access it through CI
 class Upload extends CI_Controller {
  
@@ -90,7 +89,7 @@ class Upload extends CI_Controller {
             }
             else
             {
-                $t = new Transliterate();
+                //$t = new Transliterate();
                 $result = $this->files->getFilebyId($args[2]);
                 $filename = $result[0]['newFileName'];
                 $data =  file_get_contents(APPPATH."upload/".$filename);
